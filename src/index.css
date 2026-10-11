@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Visible keyboard focus everywhere (in the base layer so utilities can override it) */
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+.leaflet-container {
+  font-family: inherit;
+  background: #e5e7eb;
+}
+.dark .leaflet-container {
+  background: #1f2937;
+}
+/* Dark map: invert the standard OSM tiles (no extra tile provider needed). */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.6);
+}
+.dark .leaflet-control-attribution {
+  background: rgb(15 23 42 / 0.8);
+  color: #cbd5e1;
+}
+.dark .leaflet-control-attribution a {
+  color: #93c5fd;
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+.leaflet-bar a {
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+}
+.dark .leaflet-bar a {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.pf-marker {
+  background: transparent;
+  border: 0;
+}
+.pf-marker svg {
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.35));
+  transition: transform 120ms ease-out;
+  transform-origin: 50% 100%;
+}
+.pf-marker:focus-visible {
+  outline: none;
+}
+.pf-marker:focus-visible svg,
+.pf-marker.is-selected svg {
+  transform: scale(1.25);
+}
+
+.pf-user-dot {
+  background: transparent;
+  border: 0;
+}
+
+@keyframes pf-pulse {
+  0% { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pf-pulse {
+  animation: pf-pulse 2s ease-out infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

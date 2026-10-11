@@ -1,5 +1,16 @@
 # Postbox Finder 📮
 
+**🇬🇧 English:** Find post boxes anywhere in the world – mobile-first, fast and honest about missing data.
+The web app shows real post boxes from OpenStreetMap, tells you whether a box accepts international mail
+(only when the data explicitly says so – never guessed from the colour), shows collection times and opens
+navigation in Google Maps, Apple Maps or another map app. Free, open source, no sign-up, no API keys.
+**Try it:** https://floriankml.github.io/find-postbox/ · The app is available in English and German
+(automatic by browser language, switchable in the ⓘ menu).
+
+---
+
+**🇩🇪 Deutsch:**
+
 Briefkästen weltweit finden – mobil, schnell, ehrlich. Die Web-App zeigt reale Briefkästen aus
 OpenStreetMap auf einer Karte, erkennt (soweit belegt) ob ein Briefkasten Auslandspost annimmt, und
 startet die Navigation in Google Maps, Apple Karten oder einer anderen Karten-App.
@@ -24,6 +35,8 @@ startet die Navigation in Google Maps, Apple Karten oder einer anderen Karten-Ap
 | Community | „Information korrigieren“, „Briefkasten fehlt/entfernt“, „Leerungszeit aktualisieren“, „Farbe/Beschriftung ergänzen“, „Internationalen Versand bestätigen“ – mit Status *Ungeprüft / Bestätigt / Widersprüchliche Angaben* (optional, Supabase) |
 | Zuverlässigkeit | Kachel-Cache (Speicher + IndexedDB), Server-Fallback, Wiederholen-Button, Offline-Hinweis mit Datenstand, leere Zustände |
 | PWA | Installierbar, App-Shell offline verfügbar, zuletzt geladene Briefkästen bleiben offline sichtbar (als ggf. veraltet gekennzeichnet) |
+| Sprachen | Deutsch und Englisch, automatisch nach Browsersprache, umschaltbar im ⓘ-Menü (`src/i18n/`) |
+| Teilen | Link-Vorschau (Open Graph / Twitter Card) mit Vorschaubild `public/og-image.jpg`, App-Icons als PNG für iOS/Android |
 | Barrierefreiheit | Tastaturbedienbar (Combobox-Suche, fokussierbare Marker, Escape schließt Dialoge), sichtbarer Fokus, ausreichende Kontraste, `prefers-reduced-motion` |
 
 ## Schnellstart
@@ -61,6 +74,7 @@ Cloudflare Pages, Netlify, Vercel. Bei Hosting im Unterpfad `VITE_BASE=/pfad/` s
 | Variable | Zweck |
 | --- | --- |
 | `VITE_BASE` | Basis-Pfad des Deployments |
+| `VITE_SITE_URL` | Absolute URL des Deployments – nötig, damit Link-Vorschaubilder funktionieren (im Pages-Workflow automatisch gesetzt) |
 | `VITE_OVERPASS_ENDPOINTS` | Eigene Overpass-Server (kommagetrennt, Reihenfolge = Priorität) |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Aktiviert Community-Beiträge |
 
@@ -99,6 +113,7 @@ src/
     community.ts        Optionales Supabase-Backend (PostgREST, ohne SDK)
     filters.ts, geo.ts, labels.ts
   components/           MapView, SearchBar, FilterBar, ResultList, DetailSheet, NavigateButton, …
+  i18n/                 Übersetzungen (de.ts definiert die Schlüssel, en.ts muss alle übersetzen – sonst Compile-Fehler)
   App.tsx               Layout (mobil: Vollbildkarte + Bottom-Sheet; Desktop: Seitenleiste)
 supabase/schema.sql     Datenbankschema für Community-Beiträge
 ```
@@ -148,6 +163,14 @@ Die Oberfläche zeigt Quelle und Evidenz pro Datensatz bereits an.
 - Öffentliche Overpass-Server sind gelegentlich überlastet (Fehler 429/504). Die App versucht automatisch
   andere Server und zeigt sonst einen „Erneut“-Button. Für viel Traffic: eigenen Overpass-Server oder
   einen vorberechneten Datenexport (siehe nächste Schritte).
+
+### Weitere Sprache hinzufügen
+
+1. `src/i18n/en.ts` nach `src/i18n/<code>.ts` kopieren und übersetzen (TypeScript meldet fehlende Schlüssel).
+2. In `src/i18n/index.ts` die Sprache in `Lang`, `DICTS`, `LOCALES` und `detect()` ergänzen.
+3. Im Info-Dialog (`src/components/InfoDialog.tsx`) zur Auswahl hinzufügen.
+
+Der Test `src/i18n/i18n.test.ts` prüft, dass alle Sprachen dieselben Schlüssel und Platzhalter haben.
 
 ## Datenschutz
 

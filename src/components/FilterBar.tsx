@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { t } from '../i18n'
 import { activeFilterCount, RADIUS_OPTIONS, type Filters } from '../lib/filters'
 import { formatDistance } from '../lib/geo'
 import { CloseIcon, FilterIcon } from './Icons'
@@ -24,14 +25,14 @@ export function FilterBar({ filters, onChange, operators, radiusHint }: Props) {
 
   return (
     <>
-      <div className="no-scrollbar -mx-3 flex items-center gap-2 overflow-x-auto px-3 py-1" role="toolbar" aria-label="Schnellfilter">
+      <div className="no-scrollbar -mx-3 flex items-center gap-2 overflow-x-auto px-3 py-1" role="toolbar" aria-label={t('filter.quick')}>
         <button
           type="button"
           className={chip(filters.shipping === 'international')}
           aria-pressed={filters.shipping === 'international'}
           onClick={() => set({ shipping: filters.shipping === 'international' ? 'all' : 'international' })}
         >
-          🌍 Ausland bestätigt
+          🌍 {t('ship.short.international')}
         </button>
         <RadiusChip value={filters.radius} onChange={(radius) => set({ radius })} hint={radiusHint} />
         <button
@@ -40,7 +41,7 @@ export function FilterBar({ filters, onChange, operators, radiusHint }: Props) {
           aria-pressed={filters.open24}
           onClick={() => set({ open24: !filters.open24 })}
         >
-          Jederzeit zugänglich
+          {t('filter.anytime')}
         </button>
         <button
           type="button"
@@ -49,7 +50,7 @@ export function FilterBar({ filters, onChange, operators, radiusHint }: Props) {
           aria-haspopup="dialog"
         >
           <FilterIcon width={16} height={16} />
-          Weitere Filter{more > 0 ? ` (${more})` : ''}
+          {t('filter.more')}{more > 0 ? ` (${more})` : ''}
         </button>
       </div>
       {panel && <FilterPanel filters={filters} onChange={onChange} operators={operators} onClose={() => setPanel(false)} />}
@@ -62,29 +63,29 @@ function RadiusChip({ value, onChange, hint }: { value: number | null; onChange:
   return (
     <label className={`${chip(value !== null)} relative inline-flex items-center gap-1`} htmlFor={id} title={hint}>
       <span aria-hidden>📍</span>
-      <span>{value === null ? 'Umkreis' : formatDistance(value)}</span>
+      <span>{value === null ? t('filter.radius') : formatDistance(value)}</span>
       <select
         id={id}
         className="absolute inset-0 cursor-pointer opacity-0"
-        aria-label={`Umkreis (${hint})`}
+        aria-label={`${t('filter.radius')} (${hint})`}
         value={value === null ? '' : RADIUS_OPTIONS.includes(value) ? String(value) : 'custom'}
         onChange={(e) => {
           const v = e.target.value
           if (v === '') onChange(null)
           else if (v === 'custom') {
-            const input = window.prompt('Umkreis in Kilometern (0,1 – 10):', value ? String(value / 1000) : '2')
+            const input = window.prompt(t('filter.customPrompt'), value ? String(value / 1000) : '2')
             const km = input ? Number(input.replace(',', '.')) : NaN
             if (Number.isFinite(km) && km > 0) onChange(Math.round(Math.min(10, Math.max(0.1, km)) * 1000))
           } else onChange(Number(v))
         }}
       >
-        <option value="">Kartenausschnitt</option>
+        <option value="">{t('filter.mapView')}</option>
         {RADIUS_OPTIONS.map((r) => (
           <option key={r} value={r}>
             {formatDistance(r)}
           </option>
         ))}
-        <option value="custom">Eigener Wert…</option>
+        <option value="custom">{t('filter.custom')}</option>
       </select>
     </label>
   )
@@ -128,25 +129,25 @@ function FilterPanel({
       >
         <div className="mb-2 flex items-center justify-between">
           <h2 id="filter-title" className="text-lg font-semibold">
-            Filter
+            {t('filter.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="grid h-10 w-10 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Filter schließen"
+            aria-label={t('filter.close')}
           >
             <CloseIcon />
           </button>
         </div>
 
         <fieldset className="border-b border-slate-200 py-3 dark:border-slate-800">
-          <legend className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">Versand</legend>
+          <legend className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">{t('filter.shipping')}</legend>
           {(
             [
-              ['all', 'Alle Briefkästen'],
-              ['international', 'Internationaler Versand bestätigt'],
-              ['national', 'Nur nationaler Versand bestätigt'],
+              ['all', t('filter.allBoxes')],
+              ['international', t('ship.long.international')],
+              ['national', t('ship.long.national')],
             ] as const
           ).map(([v, label]) => (
             <label key={v} className={row}>
@@ -161,20 +162,19 @@ function FilterPanel({
             </label>
           ))}
           <p className="text-xs text-slate-600 dark:text-slate-400">
-            „Bestätigt“ heißt: ausdrücklich in OpenStreetMap oder von mehreren Nutzer:innen angegeben. Die Farbe des
-            Briefkastens wird dafür nie verwendet.
+            {t('filter.confirmedExplain')}
           </p>
         </fieldset>
 
         <fieldset className="border-b border-slate-200 py-3 dark:border-slate-800">
-          <legend className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">Betreiber</legend>
+          <legend className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">{t('filter.operator')}</legend>
           <select
             className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-800"
             value={filters.operator}
             onChange={(e) => set({ operator: e.target.value })}
-            aria-label="Betreiber"
+            aria-label={t('filter.operator')}
           >
-            <option value="">Alle Betreiber</option>
+            <option value="">{t('filter.allOperators')}</option>
             {filters.operator && !operators.some((o) => o.name === filters.operator) && (
               <option value={filters.operator}>{filters.operator}</option>
             )}
@@ -187,16 +187,16 @@ function FilterPanel({
         </fieldset>
 
         <fieldset className="py-3">
-          <legend className="mb-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Eigenschaften</legend>
+          <legend className="mb-1 text-sm font-semibold text-slate-600 dark:text-slate-300">{t('filter.properties')}</legend>
           <label className={row}>
             <span>
-              Rund um die Uhr zugänglich
-              <span className="block text-xs text-slate-600 dark:text-slate-400">24/7 laut OSM oder im Freien angebracht</span>
+              {t('filter.open24')}
+              <span className="block text-xs text-slate-600 dark:text-slate-400">{t('filter.open24Hint')}</span>
             </span>
             <input type="checkbox" className={checkbox} checked={filters.open24} onChange={(e) => set({ open24: e.target.checked })} />
           </label>
           <label className={row}>
-            <span>Leerungszeiten vorhanden</span>
+            <span>{t('filter.hasTimes')}</span>
             <input
               type="checkbox"
               className={checkbox}
@@ -206,8 +206,8 @@ function FilterPanel({
           </label>
           <label className={row}>
             <span>
-              Kürzlich überprüft
-              <span className="block text-xs text-slate-600 dark:text-slate-400">Prüfdatum in den letzten 2 Jahren</span>
+              {t('filter.recent')}
+              <span className="block text-xs text-slate-600 dark:text-slate-400">{t('filter.recentHint')}</span>
             </span>
             <input
               type="checkbox"
@@ -224,14 +224,14 @@ function FilterPanel({
             className="h-12 flex-1 rounded-xl font-medium ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800"
             onClick={() => onChange({ ...filters, shipping: 'all', operator: '', open24: false, hasCollectionTimes: false, recentlyChecked: false })}
           >
-            Zurücksetzen
+            {t('filter.reset')}
           </button>
           <button
             type="button"
             className="h-12 flex-1 rounded-xl bg-brand-700 font-semibold text-white hover:bg-brand-800"
             onClick={onClose}
           >
-            Fertig
+            {t('filter.done')}
           </button>
         </div>
       </div>

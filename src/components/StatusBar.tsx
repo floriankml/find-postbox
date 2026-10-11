@@ -1,3 +1,5 @@
+import { t } from '../i18n'
+import { formatDateTime } from '../lib/labels'
 import type { LoadState } from '../lib/store'
 import { AlertIcon, InfoIcon, RetryIcon, SpinnerIcon } from './Icons'
 
@@ -19,7 +21,7 @@ const pill =
 /** Compact status messages: loading, errors, offline, zoom hint. */
 export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessage, onRetry, onLocate, onDismissGeo }: Props) {
   const msgs: React.ReactNode[] = []
-  const since = oldestFetch ? new Date(oldestFetch).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : null
+  const since = oldestFetch ? formatDateTime(oldestFetch) : null
 
   if (geoMessage)
     msgs.push(
@@ -36,14 +38,14 @@ export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessag
     msgs.push(
       <div key="off" className={`${pill} bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900`} role="status">
         <AlertIcon className="shrink-0" width={18} height={18} />
-        Offline{since ? ` – gespeicherte Daten (Stand ${since}), evtl. veraltet` : ' – keine gespeicherten Daten für diesen Bereich'}
+        {since ? t('status.offline', { since }) : t('status.offlineNoData')}
       </div>,
     )
   else if (stale && since && state.status !== 'loading')
     msgs.push(
       <div key="stale" className={`${pill} bg-white dark:bg-slate-900`} role="status">
         <InfoIcon className="shrink-0 text-amber-600" width={18} height={18} />
-        Teilweise ältere Daten (Stand {since})
+        {t('status.stale', { since })}
       </div>,
     )
 
@@ -51,9 +53,9 @@ export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessag
     msgs.push(
       <div key="far" className={`${pill} bg-white dark:bg-slate-900`} role="status">
         <InfoIcon className="shrink-0 text-brand-600" width={18} height={18} />
-        <span className="flex-1">Näher heranzoomen, Ort suchen oder</span>
+        <span className="flex-1">{t('status.tooFar')}</span>
         <button type="button" className="font-semibold text-brand-700 underline dark:text-brand-500" onClick={onLocate}>
-          Standort nutzen
+          {t('status.useLocation')}
         </button>
       </div>,
     )
@@ -61,14 +63,14 @@ export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessag
     msgs.push(
       <div key="load" className={`${pill} bg-white dark:bg-slate-900`} role="status" aria-live="polite">
         <SpinnerIcon className="shrink-0 text-brand-600" width={18} height={18} />
-        Briefkästen werden geladen…
+        {t('status.loading')}
       </div>,
     )
   else if (state.status === 'zoom_in')
     msgs.push(
       <div key="zoom" className={`${pill} bg-white dark:bg-slate-900`} role="status">
         <InfoIcon className="shrink-0 text-brand-600" width={18} height={18} />
-        Bereich zu groß – bitte näher heranzoomen oder Umkreis verkleinern.
+        {t('status.zoomIn')}
       </div>,
     )
   else if (state.status === 'error')
@@ -76,15 +78,15 @@ export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessag
       <div key="err" className={`${pill} bg-red-50 text-red-950 dark:bg-red-950 dark:text-red-50`} role="alert">
         <AlertIcon className="shrink-0" width={18} height={18} />
         <span className="flex-1">
-          {state.message}
-          {state.hasStaleData ? ' Zeige zwischengespeicherte Daten.' : ''}
+          {t(`err.${state.kind}`)}
+          {state.hasStaleData ? ` ${t('status.showingCached')}` : ''}
         </span>
         <button
           type="button"
           onClick={onRetry}
           className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-white/70 px-2 py-1 font-medium dark:bg-white/10"
         >
-          <RetryIcon width={16} height={16} /> Erneut
+          <RetryIcon width={16} height={16} /> {t('status.retry')}
         </button>
       </div>,
     )
@@ -92,7 +94,7 @@ export function StatusBar({ state, tooFar, online, stale, oldestFetch, geoMessag
     msgs.push(
       <div key="part" className={`${pill} bg-white dark:bg-slate-900`} role="status">
         <InfoIcon className="shrink-0 text-amber-600" width={18} height={18} />
-        Sehr viele Treffer – nur ein Teil wird angezeigt. Bitte näher heranzoomen.
+        {t('status.partial')}
       </div>,
     )
 

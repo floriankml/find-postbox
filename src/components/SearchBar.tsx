@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { t } from '../i18n'
 import { useDebounced } from '../hooks/useDebounced'
 import { searchPlaces, type Place } from '../lib/geocode'
 import type { LatLon } from '../lib/types'
@@ -41,11 +42,11 @@ export function SearchBar({ near, onPick }: Props) {
       setResults(r)
       setActive(r.length > 0 ? 0 : -1)
       setOpen(true)
-      if (r.length === 0 && explicit) setError('Kein Ort gefunden. Andere Schreibweise oder PLZ versuchen.')
+      if (r.length === 0 && explicit) setError(t('search.noResult'))
       return r
     } catch {
       if (!ac.signal.aborted) {
-        setError('Die Ortssuche ist gerade nicht erreichbar. Bitte später erneut versuchen.')
+        setError(t('search.unavailable'))
         setOpen(true)
       }
       return []
@@ -105,7 +106,7 @@ export function SearchBar({ near, onPick }: Props) {
   return (
     <form role="search" onSubmit={onSubmit} className="relative w-full">
       <label htmlFor={`${listId}-input`} className="sr-only">
-        Ort, Adresse oder Postleitzahl suchen
+        {t('search.label')}
       </label>
       <div className="flex items-center gap-2 rounded-2xl bg-white px-3 shadow-lg ring-1 ring-slate-900/10 focus-within:ring-2 focus-within:ring-brand-500 dark:bg-slate-900 dark:ring-white/10">
         <SearchIcon className="shrink-0 text-slate-500 dark:text-slate-400" />
@@ -117,7 +118,7 @@ export function SearchBar({ near, onPick }: Props) {
           enterKeyHint="search"
           autoComplete="off"
           spellCheck={false}
-          placeholder="Ort, Adresse oder PLZ suchen"
+          placeholder={t('search.placeholder')}
           className="h-12 w-full min-w-0 bg-transparent text-base outline-none focus-visible:outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
           value={q}
           onChange={(e) => {
@@ -144,7 +145,7 @@ export function SearchBar({ near, onPick }: Props) {
               setError(null)
               inputRef.current?.focus()
             }}
-            aria-label="Suche leeren"
+            aria-label={t('search.clear')}
           >
             <CloseIcon width={18} height={18} />
           </button>
@@ -173,7 +174,7 @@ export function SearchBar({ near, onPick }: Props) {
             </li>
           ))}
           <li className="border-t border-slate-100 px-4 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            Suche: Photon (komoot) / Nominatim · Daten © OpenStreetMap
+            {t('search.attribution')}
           </li>
         </ul>
       )}

@@ -1,3 +1,5 @@
+import type { Msg } from '../i18n'
+
 /** Geographic point in WGS84. */
 export interface LatLon {
   lat: number
@@ -34,19 +36,22 @@ export type Evidence =
 export interface ShippingInfo {
   status: ShippingStatus
   evidence: Evidence
-  /** Human readable explanation (German) of where the status comes from. */
-  reason: string
+  /** Translatable explanation of where the status comes from. */
+  reason: Msg
   /** Raw text snippets from the data source that support the status. */
   quotes: string[]
   /** Additional hints that never change `status` (e.g. several apertures). */
-  hints: string[]
+  hints: Msg[]
 }
 
 export type AccessKind = '24/7' | 'outdoor' | 'restricted' | 'unknown'
 
+/** Why access is restricted (OSM `access` value or location). */
+export type AccessReason = 'private' | 'no' | 'customers' | 'employees' | 'residents' | 'opening_hours' | 'indoor'
+
 export interface AccessInfo {
   kind: AccessKind
-  label: string
+  reason?: AccessReason
   /** Opening hours of the surrounding building, if mapped. */
   openingHours?: string
   indoor?: boolean

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { t } from '../i18n'
 import { navigationTargets } from '../lib/navigation'
 import type { LatLon } from '../lib/types'
 import { ChevronDownIcon, NavigateIcon } from './Icons'
@@ -46,14 +47,14 @@ export function NavigateButton({ dest, origin }: Props) {
         className="flex h-13 flex-1 items-center justify-center gap-2 rounded-l-2xl bg-brand-700 px-4 text-base font-semibold text-white shadow-md hover:bg-brand-800 active:bg-brand-800"
       >
         <NavigateIcon />
-        Dorthin navigieren
+        {t('nav.go')}
       </a>
       <button
         type="button"
         className="grid h-13 w-13 place-items-center rounded-r-2xl border-l border-white/25 bg-brand-700 text-white shadow-md hover:bg-brand-800"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Andere Karten-App wählen"
+        aria-label={t('nav.choose')}
         onClick={() => setOpen((o) => !o)}
       >
         <ChevronDownIcon />
@@ -87,7 +88,7 @@ export function NavigateButton({ dest, origin }: Props) {
             </a>
           ))}
           <div className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-            Ziel: {dest.lat.toFixed(5)}, {dest.lon.toFixed(5)}
+            {t('nav.target')}: {dest.lat.toFixed(5)}, {dest.lon.toFixed(5)}
           </div>
         </div>
       )}

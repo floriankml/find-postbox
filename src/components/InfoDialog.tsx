@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { setLang, t, useLang } from '../i18n'
 import { communityEnabled } from '../lib/community'
 import type { ThemePref } from '../hooks/useTheme'
 import { AutoThemeIcon, CloseIcon, MoonIcon, SunIcon } from './Icons'
@@ -20,6 +21,13 @@ export function InfoDialog({ onClose, theme, onCycleTheme }: { onClose: () => vo
 
   const dot = (c: string) => <span className="inline-block h-3.5 w-3.5 rounded-full ring-2 ring-white" style={{ background: c }} />
 
+  const lang = useLang()
+  const link = (href: string, text: string) => (
+    <a className="text-brand-700 underline dark:text-brand-500" href={href} target="_blank" rel="noopener noreferrer">
+      {text}
+    </a>
+  )
+
   return (
     <div className="fixed inset-0 z-[1400] flex items-end justify-center bg-slate-950/40 md:items-center" onClick={onClose}>
       <div
@@ -32,66 +40,87 @@ export function InfoDialog({ onClose, theme, onCycleTheme }: { onClose: () => vo
       >
         <div className="mb-2 flex items-center justify-between">
           <h2 id="info-title" className="text-lg font-semibold">
-            Über Postbox Finder
+            {t('info.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="grid h-10 w-10 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Schließen"
+            aria-label={t('close')}
           >
             <CloseIcon />
           </button>
         </div>
 
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <span id="lang-label" className="font-medium">
+            {t('info.language')}
+          </span>
+          <div role="radiogroup" aria-labelledby="lang-label" className="flex rounded-xl p-1 ring-1 ring-slate-300 dark:ring-slate-700">
+            {(
+              [
+                ['de', 'Deutsch'],
+                ['en', 'English'],
+              ] as const
+            ).map(([code, name]) => (
+              <button
+                key={code}
+                type="button"
+                role="radio"
+                aria-checked={lang === code}
+                lang={code}
+                onClick={() => setLang(code)}
+                className={`h-9 rounded-lg px-3 font-medium ${
+                  lang === code ? 'bg-brand-700 text-white dark:bg-brand-500 dark:text-slate-950' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={onCycleTheme}
-          className="mt-1 flex h-11 w-full items-center justify-between rounded-xl px-3 ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800"
+          className="mt-3 flex h-11 w-full items-center justify-between rounded-xl px-3 ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800"
         >
           <span className="inline-flex items-center gap-2">
-            <ThemeIcon width={18} height={18} /> Darstellung
+            <ThemeIcon width={18} height={18} /> {t('info.theme')}
           </span>
           <span className="text-slate-600 dark:text-slate-400">
-            {theme === 'dark' ? 'Dunkel' : theme === 'light' ? 'Hell' : 'Wie System'}
+            {theme === 'dark' ? t('info.themeDark') : theme === 'light' ? t('info.themeLight') : t('info.themeSystem')}
           </span>
         </button>
 
-        <h3 className="mt-4 font-semibold">Legende der Marker</h3>
+        <h3 className="mt-4 font-semibold">{t('info.legend')}</h3>
         <ul className="mt-1 space-y-1">
-          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.international)} Internationaler Versand bestätigt</li>
-          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.national)} Nur nationaler Versand bestätigt</li>
-          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.unknown)} Versandmöglichkeiten unklar</li>
-          <li className="flex items-center gap-2">{dot('#facc15')} Gelber Punkt: nächstgelegener Briefkasten</li>
+          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.international)} {t('ship.long.international')}</li>
+          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.national)} {t('ship.long.national')}</li>
+          <li className="flex items-center gap-2">{dot(MARKER_COLOURS.unknown)} {t('ship.long.unknown')}</li>
+          <li className="flex items-center gap-2">{dot('#facc15')} {t('info.legendNearest')}</li>
         </ul>
-        <p className="mt-1 text-slate-600 dark:text-slate-400">
-          Die Markerfarbe zeigt den Versandstatus – nicht die Farbe des Briefkastens. Die tatsächliche Farbe steht in der
-          Detailansicht.
-        </p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{t('info.legendNote')}</p>
 
-        <h3 className="mt-4 font-semibold">Woher kommen die Daten?</h3>
+        <h3 className="mt-4 font-semibold">{t('info.dataTitle')}</h3>
         <p>
-          Briefkästen stammen aus <a className="text-brand-700 underline dark:text-brand-500" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{' '}
-          (Objekte mit <code>amenity=post_box</code>), abgefragt über die Overpass API. Die Daten werden von Freiwilligen gepflegt und sind
-          je nach Region unterschiedlich vollständig. Ortssuche: Photon (komoot) und Nominatim. Lizenz: ODbL – © OpenStreetMap-Mitwirkende.
+          {t('info.dataText1')} {link('https://www.openstreetmap.org/copyright', 'OpenStreetMap')} {t('info.dataText2')}
         </p>
         <p className="mt-2">
-          <strong>Keine offizielle Auskunft:</strong> Die Angaben stammen nicht von den Postgesellschaften. Leerungszeiten und
-          Versandmöglichkeiten bitte im Zweifel am Briefkasten prüfen.
+          <strong>{t('info.notOfficial')}</strong> {t('info.notOfficialText')}
         </p>
 
-        <h3 className="mt-4 font-semibold">Wie wird „Auslandsversand“ erkannt?</h3>
+        <h3 className="mt-4 font-semibold">{t('info.intlTitle')}</h3>
         <p>
-          Nur wenn es ausdrücklich in den Daten steht (z. B. ein entsprechender Eintrag oder Beschreibungstext in OpenStreetMap){communityEnabled ? ' oder mehrere Nutzer:innen es unabhängig bestätigt haben' : ''}.
-          Die Farbe eines Briefkastens wird nie als Nachweis verwendet. Allgemeine Regeln mancher Postdienste werden separat als
-          „Allgemeiner Hinweis“ angezeigt.
+          {t('info.intlText')}
+          {communityEnabled ? ` ${t('info.intlCommunity')}` : ''} {t('info.intlText2')}
         </p>
 
-        <h3 className="mt-4 font-semibold">Datenschutz</h3>
-        <p>
-          Dein Standort wird nur nach deiner Zustimmung im Browser verwendet und nicht an unsere Server übertragen. Für Kartenkacheln,
-          Briefkastendaten und Ortssuche ruft dein Browser die genannten OpenStreetMap-Dienste direkt auf (dabei wird deine IP-Adresse
-          übertragen). Geladene Daten werden lokal auf deinem Gerät zwischengespeichert.
+        <h3 className="mt-4 font-semibold">{t('info.privacyTitle')}</h3>
+        <p>{t('info.privacyText')}</p>
+
+        <p className="mt-4 text-slate-600 dark:text-slate-400">
+          {t('info.openSource')} {link('https://github.com/floriankml/find-postbox', 'GitHub')}
         </p>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { setLang } from '../i18n'
 import { applyFilters, DEFAULT_FILTERS } from './filters'
 import { bboxOfTiles, distanceMeters, formatDistance, tileRangeForBBox, tilesInRange } from './geo'
 import { normalizeOsmElement } from './osm'
@@ -9,7 +10,10 @@ describe('geo', () => {
     expect(d).toBeGreaterThan(1100)
     expect(d).toBeLessThan(1120)
     expect(formatDistance(437)).toBe('440 m')
+    setLang('de')
     expect(formatDistance(1530)).toBe('1,5 km')
+    setLang('en')
+    expect(formatDistance(1530)).toBe('1.5 km')
   })
 
   it('covers a bbox with tiles and back', () => {

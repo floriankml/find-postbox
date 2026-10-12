@@ -18,8 +18,8 @@ export function NavigateButton({ dest, origin }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const targets = navigationTargets(dest, origin)
-  const primary = targets.find((t) => t.primary)!
-  const others = targets.filter((t) => !t.primary)
+  const primary = targets.find((x) => x.primary)!
+  const others = targets.filter((x) => !x.primary)
 
   useEffect(() => {
     if (!open) return
@@ -74,17 +74,17 @@ export function NavigateButton({ dest, origin }: Props) {
           >
             {primary.label}
           </a>
-          {others.map((t) => (
+          {others.map((target) => (
             <a
-              key={t.id}
+              key={target.id}
               role="menuitem"
-              href={t.url}
-              target={t.id === 'geo' ? undefined : '_blank'}
+              href={target.url}
+              target={target.id === 'geo' ? undefined : '_blank'}
               rel="noopener noreferrer"
               className="block border-t border-slate-100 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700"
               onClick={() => setOpen(false)}
             >
-              {t.label}
+              {target.label}
             </a>
           ))}
           <div className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">

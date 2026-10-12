@@ -46,7 +46,7 @@ export function parseSimpleCollectionTimes(raw: string): WeekSchedule | null {
     )
     if (!m) return null
     const daySel = m[1] ?? 'Mo-Su'
-    const times = m[2] === 'off' ? [] : m[2].split(',').map((t) => t.trim().padStart(5, '0'))
+    const times = m[2] === 'off' ? [] : m[2].split(',').map((x) => x.trim().padStart(5, '0'))
     for (const part of daySel.split(',')) {
       const [a, b] = part.split('-')
       const i0 = DAYS.indexOf(a as (typeof DAYS)[number])

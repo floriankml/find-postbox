@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import type { LatLon } from './types'
 
 export type Platform = 'ios' | 'android' | 'other'
@@ -32,13 +33,13 @@ export function googleMapsUrl(dest: LatLon, origin?: LatLon | null): string {
 }
 
 /** Apple Maps URL – opens the Maps app on iOS/macOS, a web map elsewhere. */
-export function appleMapsUrl(dest: LatLon, label = 'Briefkasten'): string {
+export function appleMapsUrl(dest: LatLon, label = t('postbox')): string {
   const p = new URLSearchParams({ daddr: `${fmt(dest.lat)},${fmt(dest.lon)}`, dirflg: 'w', q: label })
   return `https://maps.apple.com/?${p}`
 }
 
 /** RFC 5870 geo URI – Android shows an app chooser (OsmAnd, Organic Maps, Google Maps, …). */
-export function geoUri(dest: LatLon, label = 'Briefkasten'): string {
+export function geoUri(dest: LatLon, label = t('postbox')): string {
   return `geo:${fmt(dest.lat)},${fmt(dest.lon)}?q=${fmt(dest.lat)},${fmt(dest.lon)}(${encodeURIComponent(label)})`
 }
 
@@ -50,9 +51,9 @@ export function osmDirectionsUrl(dest: LatLon, origin?: LatLon | null): string {
 
 export function navigationTargets(dest: LatLon, origin: LatLon | null, platform: Platform = detectPlatform()): NavTarget[] {
   const google: NavTarget = { id: 'google', label: 'Google Maps', url: googleMapsUrl(dest, origin) }
-  const apple: NavTarget = { id: 'apple', label: 'Apple Karten', url: appleMapsUrl(dest) }
-  const geo: NavTarget = { id: 'geo', label: 'Andere Karten-App', url: geoUri(dest) }
-  const osm: NavTarget = { id: 'osm', label: 'OpenStreetMap (Web)', url: osmDirectionsUrl(dest, origin) }
+  const apple: NavTarget = { id: 'apple', label: t('nav.apple'), url: appleMapsUrl(dest) }
+  const geo: NavTarget = { id: 'geo', label: t('nav.geo'), url: geoUri(dest) }
+  const osm: NavTarget = { id: 'osm', label: t('nav.osm'), url: osmDirectionsUrl(dest, origin) }
   switch (platform) {
     case 'android':
       return [{ ...google, primary: true }, geo, osm]

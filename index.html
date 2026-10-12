@@ -1,17 +1,36 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
-    <meta name="description" content="Postbox Finder – Briefkästen in der Nähe finden, Leerungszeiten und Versandhinweise prüfen und direkt hin navigieren. Daten: OpenStreetMap." />
-    <title>Postbox Finder</title>
+    <title>Postbox Finder – find post boxes worldwide</title>
+    <meta name="description" content="Find the nearest post box, check collection times and whether it accepts international mail – then navigate there in one tap. Free, no sign-up. Briefkästen weltweit finden." />
+
+    <!-- Link previews (WhatsApp, Reddit, Facebook, X, Slack …). %SITE_URL% is set at build time. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Postbox Finder" />
+    <meta property="og:title" content="Postbox Finder – find post boxes worldwide" />
+    <meta property="og:description" content="Nearest post box, collection times, international mail info and one-tap navigation. Free, open source, no sign-up." />
+    <meta property="og:url" content="%SITE_URL%" />
+    <meta property="og:image" content="%SITE_URL%og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Postbox Finder on a phone: a map with post box markers and the nearest post box highlighted" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Postbox Finder – find post boxes worldwide" />
+    <meta name="twitter:description" content="Nearest post box, collection times, international mail info and one-tap navigation. Free, open source." />
+    <meta name="twitter:image" content="%SITE_URL%og-image.jpg" />
   </head>
   <body>
     <div id="root"></div>
-    <noscript>Postbox Finder benötigt JavaScript.</noscript>
+    <noscript>Postbox Finder needs JavaScript. / Postbox Finder benötigt JavaScript.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

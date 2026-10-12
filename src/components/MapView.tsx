@@ -3,7 +3,8 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import { Circle, CircleMarker, MapContainer, Marker, TileLayer, useMap, useMapEvents, ZoomControl } from 'react-leaflet'
 import type { ResultItem } from '../lib/filters'
 import type { BBox, LatLon, ShippingStatus } from '../lib/types'
-import { SHIPPING_LONG } from './ShippingBadge'
+import { t } from '../i18n'
+import { shippingLong } from './ShippingBadge'
 
 export interface MapCommand {
   center: LatLon
@@ -168,6 +169,8 @@ interface Props {
   onView: (v: ViewInfo) => void
   searchPoint: LatLon | null
   showZoom: boolean
+  /** Leaflet does not update attribution/titles after creation – remount on change. */
+  lang: string
 }
 
 const searchIcon = L.divIcon({
@@ -179,7 +182,7 @@ const searchIcon = L.divIcon({
 
 const MAX_PIN_MARKERS = 350
 
-function MapViewInner({ items, selectedId, nearestId, user, radiusCenter, radius, command, onSelect, onView, searchPoint, showZoom }: Props) {
+function MapViewInner({ items, selectedId, nearestId, user, radiusCenter, radius, command, onSelect, onView, searchPoint, showZoom, lang }: Props) {
   const initial = useMemo(readStoredView, [])
   const usePins = items.length <= MAX_PIN_MARKERS
   const selected = items.find((i) => i.box.id === selectedId)?.box ?? null
@@ -197,11 +200,12 @@ function MapViewInner({ items, selectedId, nearestId, user, radiusCenter, radius
       attributionControl
     >
       <TileLayer
+        key={lang}
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxZoom={19}
-        attribution='Karte &amp; Daten: &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap-Mitwirkende</a> (ODbL)'
+        attribution={t('map.attribution')}
       />
-      {showZoom && <ZoomControl position="bottomright" zoomInTitle="Hineinzoomen" zoomOutTitle="Herauszoomen" />}
+      {showZoom && <ZoomControl position="bottomright" zoomInTitle={t('map.zoomIn')} zoomOutTitle={t('map.zoomOut')} />}
       <ViewReporter onView={onView} />
       <CommandRunner command={command} />
       <SizeWatcher />
@@ -236,13 +240,13 @@ function MapViewInner({ items, selectedId, nearestId, user, radiusCenter, radius
             const isNear = box.id === nearestId
             return (
               <Marker
-                key={box.id}
+                key={`${box.id}:${lang}`}
                 position={[box.lat, box.lon]}
                 icon={markerIcon(box.shipping.status, isNear, isSel)}
-                title={`Briefkasten${box.operator ? ` (${box.operator})` : ''} – ${SHIPPING_LONG[box.shipping.status]}${
-                  isNear ? ' – nächstgelegen' : ''
+                title={`${t('postbox')}${box.operator ? ` (${box.operator})` : ''} – ${shippingLong(box.shipping.status)}${
+                  isNear ? ` – ${t('map.nearest')}` : ''
                 }`}
-                alt="Briefkasten"
+                alt={t('postbox')}
                 zIndexOffset={isSel ? 1000 : isNear ? 500 : 0}
                 eventHandlers={{ click: () => onSelect(box.id) }}
               />

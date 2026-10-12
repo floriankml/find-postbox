@@ -1,3 +1,4 @@
+import type { Msg, MessageKey } from '../i18n'
 import type { ShippingInfo } from './types'
 
 /**
@@ -51,13 +52,11 @@ function classifyValue(key: string, value: string): 'international' | 'national'
 }
 
 export function detectShipping(tags: Record<string, string>): ShippingInfo {
-  const hints: string[] = []
+  const hints: Msg[] = []
 
   const apertures = Number.parseInt(tags['post_box:apertures'] ?? '', 10)
   if (Number.isFinite(apertures) && apertures >= 2) {
-    hints.push(
-      `Dieser Briefkasten hat ${apertures} Einwurfschlitze. Sie können nach Ziel (z. B. Ort/Inland/Ausland) oder Sendungsart getrennt sein – Beschriftung prüfen.`,
-    )
+    hints.push({ key: 'ship.hint.apertures', params: { n: apertures } })
   }
 
   // 1. Structured tags
@@ -71,15 +70,15 @@ export function detectShipping(tags: Record<string, string>): ShippingInfo {
       return {
         status: cls,
         evidence: 'osm_tag',
-        reason:
-          cls === 'international'
-            ? `In OpenStreetMap ist „${key}=${value}“ eingetragen.`
-            : `In OpenStreetMap ist „${key}=${value}“ eingetragen (nur Inlandspost).`,
+        reason: {
+          key: cls === 'international' ? 'ship.reason.tagIntl' : 'ship.reason.tagNational',
+          params: { tag: `${key}=${value}` },
+        },
         quotes: [`${key}=${value}`],
         hints,
       }
     }
-    hints.push(`Eintrag „${key}=${value}“ – Bedeutung für den Versand unklar.`)
+    hints.push({ key: 'ship.hint.unclearTag', params: { tag: `${key}=${value}` } })
   }
 
   // 2. Free text
@@ -89,7 +88,7 @@ export function detectShipping(tags: Record<string, string>): ShippingInfo {
       return {
         status: 'national',
         evidence: 'osm_text',
-        reason: `Die Beschreibung in OpenStreetMap („${k}“) deutet auf reine Inlandspost hin.`,
+        reason: { key: 'ship.reason.textNational', params: { key: k } },
         quotes: [text],
         hints,
       }
@@ -100,7 +99,7 @@ export function detectShipping(tags: Record<string, string>): ShippingInfo {
       return {
         status: 'international',
         evidence: 'osm_text',
-        reason: `Die Beschreibung in OpenStreetMap („${k}“) erwähnt Auslandsversand.`,
+        reason: { key: 'ship.reason.textIntl', params: { key: k } },
         quotes: [text],
         hints,
       }
@@ -110,7 +109,7 @@ export function detectShipping(tags: Record<string, string>): ShippingInfo {
   return {
     status: 'unknown',
     evidence: 'none',
-    reason: 'Für diesen Briefkasten liegen keine Angaben zu Inlands- oder Auslandsversand vor.',
+    reason: { key: 'ship.reason.none' },
     quotes: [],
     hints,
   }
@@ -119,7 +118,7 @@ export function detectShipping(tags: Record<string, string>): ShippingInfo {
 export interface OperatorRule {
   match: { wikidata?: string[]; name?: RegExp }
   /** General rule for the operator – NEVER shown as confirmed for a single box. */
-  text: string
+  text: MessageKey
 }
 
 /**
@@ -130,35 +129,35 @@ export interface OperatorRule {
 export const OPERATOR_RULES: OperatorRule[] = [
   {
     match: { wikidata: ['Q157645'], name: /^deutsche post\b/i },
-    text: 'Deutsche Post: Briefkästen nehmen grundsätzlich auch ausreichend frankierte Briefe und Postkarten ins Ausland an.',
+    text: 'rule.deutschePost',
   },
   {
     match: { wikidata: ['Q638098'], name: /^royal mail\b/i },
-    text: 'Royal Mail: Ausreichend frankierte internationale Briefe und Postkarten können in Briefkästen eingeworfen werden.',
+    text: 'rule.royalMail',
   },
   {
     match: { wikidata: ['Q373724'], name: /^la poste$/i },
-    text: 'La Poste (Frankreich): Gelbe Briefkästen nehmen in der Regel auch ausreichend frankierte Auslandspost an. Bei mehreren Schlitzen auf die Beschriftung achten.',
+    text: 'rule.laPoste',
   },
   {
     match: { wikidata: ['Q668687'], name: /^(united states postal service|usps)$/i },
-    text: 'USPS: Internationale Briefe und Postkarten mit ausreichender Frankierung dürfen in Sammelbriefkästen; mit Briefmarken frankierte Sendungen über 13 oz müssen am Schalter abgegeben werden.',
+    text: 'rule.usps',
   },
   {
     match: { wikidata: ['Q1032001'], name: /^(canada post|postes canada)/i },
-    text: 'Canada Post: Ausreichend frankierte internationale Briefe und Postkarten können in Briefkästen eingeworfen werden.',
+    text: 'rule.canadaPost',
   },
   {
     match: { wikidata: ['Q11509260'], name: /日本郵便|japan post/i },
-    text: 'Japan Post: Internationale Postkarten und Briefe können in Briefkästen eingeworfen werden. Bei zwei Schlitzen gilt meist: links Briefe/Postkarten, rechts sonstige Sendungen – Beschriftung prüfen.',
+    text: 'rule.japanPost',
   },
   {
     match: { name: /中華郵政|chunghwa post/i },
-    text: 'Chunghwa Post (Taiwan): Häufig getrennte Kästen für Express/Luftpost und normale Inlandspost. Beschriftung am Kasten prüfen – die Farbe allein ist kein sicherer Hinweis.',
+    text: 'rule.chunghwaPost',
   },
 ]
 
-export function operatorRule(tags: Record<string, string>): string | null {
+export function operatorRule(tags: Record<string, string>): MessageKey | null {
   const wd = [tags['operator:wikidata'], tags['brand:wikidata']].filter(Boolean)
   const names = [tags.operator, tags.brand, tags['operator:en']].filter(Boolean) as string[]
   for (const rule of OPERATOR_RULES) {

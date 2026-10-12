@@ -1,3 +1,4 @@
+import { getLocale } from '../i18n'
 import type { BBox, LatLon } from './types'
 
 const R = 6371008.8
@@ -15,8 +16,8 @@ export function distanceMeters(a: LatLon, b: LatLon): number {
 export function formatDistance(m: number): string {
   if (!Number.isFinite(m)) return ''
   if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`
-  if (m < 10000) return `${(m / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} km`
-  return `${Math.round(m / 1000).toLocaleString('de-DE')} km`
+  if (m < 10000) return `${(m / 1000).toLocaleString(getLocale(), { maximumFractionDigits: 1 })} km`
+  return `${Math.round(m / 1000).toLocaleString(getLocale())} km`
 }
 
 /** Rough walking time at 4.8 km/h. */

@@ -25,7 +25,7 @@ describe('detectShipping', () => {
   it('keeps unrecognised destination values unknown but mentions them', () => {
     const s = detectShipping({ destination: 'Wellington' })
     expect(s.status).toBe('unknown')
-    expect(s.hints.join(' ')).toContain('destination=Wellington')
+    expect(s.hints).toContainEqual({ key: 'ship.hint.unclearTag', params: { tag: 'destination=Wellington' } })
   })
 
   it('reads free text with weaker evidence', () => {
@@ -42,14 +42,14 @@ describe('detectShipping', () => {
   it('hints at several apertures without changing the status', () => {
     const s = detectShipping({ 'post_box:apertures': '2' })
     expect(s.status).toBe('unknown')
-    expect(s.hints[0]).toContain('2 Einwurfschlitze')
+    expect(s.hints[0]).toEqual({ key: 'ship.hint.apertures', params: { n: 2 } })
   })
 })
 
 describe('operatorRule', () => {
   it('matches by wikidata or name', () => {
-    expect(operatorRule({ 'operator:wikidata': 'Q157645' })).toContain('Deutsche Post')
-    expect(operatorRule({ operator: 'Royal Mail' })).toContain('Royal Mail')
+    expect(operatorRule({ 'operator:wikidata': 'Q157645' })).toBe('rule.deutschePost')
+    expect(operatorRule({ operator: 'Royal Mail' })).toBe('rule.royalMail')
     expect(operatorRule({ operator: 'Unknown Post' })).toBeNull()
   })
 })

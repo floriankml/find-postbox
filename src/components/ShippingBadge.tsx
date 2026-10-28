@@ -1,17 +1,9 @@
-import type { ShippingInfo } from '../lib/types'
+import { t } from '../i18n'
+import type { ShippingInfo, ShippingStatus } from '../lib/types'
 import { GlobeIcon, HelpIcon, HomeIcon } from './Icons'
 
-export const SHIPPING_TEXT = {
-  international: 'Ausland bestätigt',
-  national: 'Nur Inland bestätigt',
-  unknown: 'Versand unklar',
-} as const
-
-export const SHIPPING_LONG = {
-  international: 'Internationaler Versand bestätigt',
-  national: 'Nur nationaler Versand bestätigt',
-  unknown: 'Versandmöglichkeiten unklar',
-} as const
+export const shippingShort = (s: ShippingStatus) => t(`ship.short.${s}`)
+export const shippingLong = (s: ShippingStatus) => t(`ship.long.${s}`)
 
 const STYLES = {
   international:
@@ -22,7 +14,7 @@ const STYLES = {
 
 export function ShippingBadge({ shipping, size = 'sm' }: { shipping: ShippingInfo; size?: 'sm' | 'md' }) {
   const Icon = shipping.status === 'international' ? GlobeIcon : shipping.status === 'national' ? HomeIcon : HelpIcon
-  const text = size === 'md' ? SHIPPING_LONG[shipping.status] : SHIPPING_TEXT[shipping.status]
+  const text = size === 'md' ? shippingLong(shipping.status) : shippingShort(shipping.status)
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full font-medium ring-1 ring-inset ${STYLES[shipping.status]} ${
@@ -31,7 +23,7 @@ export function ShippingBadge({ shipping, size = 'sm' }: { shipping: ShippingInf
     >
       <Icon width={size === 'md' ? 16 : 13} height={size === 'md' ? 16 : 13} />
       {text}
-      {shipping.evidence === 'community_confirmed' && <span className="font-normal opacity-80">(Community)</span>}
+      {shipping.evidence === 'community_confirmed' && <span className="font-normal opacity-80">({t('ship.community')})</span>}
     </span>
   )
 }

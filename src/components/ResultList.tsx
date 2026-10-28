@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t } from '../i18n'
 import { nextCollection } from '../lib/collectionTimes'
 import { operatorName, type ResultItem } from '../lib/filters'
 import { formatDistance } from '../lib/geo'
@@ -19,7 +20,7 @@ export function ResultList({ items, nearestId, distanceLabel, onSelect }: Props)
   const [limit, setLimit] = useState(PAGE)
   return (
     <div>
-      <ul className="divide-y divide-slate-200 dark:divide-slate-800" aria-label="Briefkästen, nach Entfernung sortiert">
+      <ul className="divide-y divide-slate-200 dark:divide-slate-800" aria-label={t('list.aria')}>
         {items.slice(0, limit).map(({ box, distance }) => {
           const next = box.collectionTimes ? nextCollection(box.collectionTimes) : null
           const swatch = box.colour ? colourCss(box.colour.split(';')[0]) : null
@@ -34,15 +35,15 @@ export function ResultList({ items, nearestId, distanceLabel, onSelect }: Props)
                   <div className="flex items-center gap-2">
                     {box.id === nearestId && (
                       <span className="rounded bg-yellow-300 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-yellow-950">
-                        Nächster
+                        {t('list.nearest')}
                       </span>
                     )}
                     <span className="truncate font-medium">
-                      {operatorName(box) ?? 'Betreiber unbekannt'}
+                      {operatorName(box) ?? t('operator.unknown')}
                     </span>
                   </div>
                   <div className="mt-0.5 truncate text-sm text-slate-600 dark:text-slate-400">
-                    {box.address ?? box.ref ?? box.name ?? 'Keine Adresse hinterlegt'}
+                    {box.address ?? box.ref ?? box.name ?? t('address.none')}
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                     <ShippingBadge shipping={box.shipping} />
@@ -52,10 +53,10 @@ export function ResultList({ items, nearestId, distanceLabel, onSelect }: Props)
                       </span>
                     ) : box.collectionTimes ? (
                       <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300">
-                        <ClockIcon width={13} height={13} /> Leerungszeiten vorhanden
+                        <ClockIcon width={13} height={13} /> {t('list.hasTimes')}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-500 dark:text-slate-400">Leerung unbekannt</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{t('list.timesUnknown')}</span>
                     )}
                     {swatch && (
                       <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300">
@@ -82,7 +83,7 @@ export function ResultList({ items, nearestId, distanceLabel, onSelect }: Props)
             className="h-11 w-full rounded-xl font-medium ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-900"
             onClick={() => setLimit((l) => l + PAGE)}
           >
-            Weitere {Math.min(PAGE, items.length - limit)} anzeigen ({items.length - limit} übrig)
+            {t('list.more', { n: Math.min(PAGE, items.length - limit), rest: items.length - limit })}
           </button>
         </div>
       )}

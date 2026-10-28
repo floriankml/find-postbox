@@ -10,7 +10,8 @@ const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 /** Larger viewports must be zoomed in first (protects the Overpass service). */
 export const MAX_TILES = 160
 const MAX_PERSISTED_TILES = 400
-const CACHE_VERSION = 1
+// Bump when the Postbox model changes so old IndexedDB entries are ignored.
+const CACHE_VERSION = 2
 
 interface TileEntry {
   v: number
@@ -172,7 +173,7 @@ export class PostboxStore {
       if (store) void this.prune(store)
       this.rebuild({ status: 'ready', partial })
     } catch (e) {
-      const err = e instanceof DataSourceError ? e : new DataSourceError('network', 'Der Datendienst ist nicht erreichbar.')
+      const err = e instanceof DataSourceError ? e : new DataSourceError('network', 'Network error')
       const hasStaleData = needed.some((k) => this.tiles.has(k))
       this.rebuild({ status: 'error', message: err.message, kind: err.kind, hasStaleData })
     }

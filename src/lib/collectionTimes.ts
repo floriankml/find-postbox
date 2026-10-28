@@ -5,20 +5,14 @@
  * complex is shown verbatim instead of being guessed.
  */
 
-const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const
-const DAY_DE: Record<string, string> = {
-  Mo: 'Mo',
-  Tu: 'Di',
-  We: 'Mi',
-  Th: 'Do',
-  Fr: 'Fr',
-  Sa: 'Sa',
-  Su: 'So',
-  PH: 'Feiertag',
-  SH: 'Schulferien',
-}
+import { t, type MessageKey } from '../i18n'
 
-/** Human readable German version of a collection_times value, one entry per rule. */
+const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const
+
+const day = (d: string) => t(`day.${d}` as MessageKey)
+const time = (hhmm: string) => t('time', { time: hhmm })
+
+/** Human readable, translated version of a collection_times value, one entry per rule. */
 export function formatCollectionTimes(raw: string): string[] {
   return raw
     .split(';')
@@ -26,11 +20,11 @@ export function formatCollectionTimes(raw: string): string[] {
     .filter(Boolean)
     .map((rule) =>
       rule
-        .replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)\b/g, (d) => DAY_DE[d] ?? d)
-        .replace(/\boff\b|\bclosed\b/gi, 'keine Leerung')
+        .replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)\b/g, (d) => day(d))
+        .replace(/\boff\b|\bclosed\b/gi, t('ct.none'))
         .replace(/-/g, '–')
         .replace(/,(?=\d)/g, ', ')
-        .replace(/(\d{2}:\d{2})/g, '$1 Uhr'),
+        .replace(/(\d{2}:\d{2})/g, (m) => time(m)),
     )
 }
 
@@ -52,7 +46,7 @@ export function parseSimpleCollectionTimes(raw: string): WeekSchedule | null {
     )
     if (!m) return null
     const daySel = m[1] ?? 'Mo-Su'
-    const times = m[2] === 'off' ? [] : m[2].split(',').map((t) => t.trim().padStart(5, '0'))
+    const times = m[2] === 'off' ? [] : m[2].split(',').map((x) => x.trim().padStart(5, '0'))
     for (const part of daySel.split(',')) {
       const [a, b] = part.split('-')
       const i0 = DAYS.indexOf(a as (typeof DAYS)[number])
@@ -74,7 +68,7 @@ export function mondayIndex(d: Date): number {
 }
 
 export interface NextCollection {
-  /** e.g. "heute 17:45", "morgen 09:00", "Mo 09:00" */
+  /** e.g. "today 17:45", "tomorrow 09:00", "Mon 09:00" */
   label: string
   isToday: boolean
 }
@@ -92,11 +86,10 @@ export function nextCollection(raw: string, now: Date = new Date()): NextCollect
   for (let offset = 0; offset < 8; offset++) {
     const idx = (today + offset) % 7
     const times = [...week[idx]].sort()
-    const candidate = offset === 0 ? times.find((t) => t > hhmm) : times[0]
+    const candidate = offset === 0 ? times.find((x) => x > hhmm) : times[0]
     if (candidate) {
-      const dayLabel =
-        offset === 0 ? 'heute' : offset === 1 ? 'morgen' : DAY_DE[DAYS[idx]]
-      return { label: `${dayLabel} ${candidate} Uhr`, isToday: offset === 0 }
+      const dayLabel = offset === 0 ? t('ct.today') : offset === 1 ? t('ct.tomorrow') : day(DAYS[idx])
+      return { label: `${dayLabel} ${time(candidate)}`, isToday: offset === 0 }
     }
   }
   return null

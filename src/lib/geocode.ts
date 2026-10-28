@@ -1,3 +1,4 @@
+import { getLang, t } from '../i18n'
 import { kvGet, kvSet } from './store'
 import type { BBox, LatLon } from './types'
 
@@ -21,7 +22,7 @@ export function parseCoordinates(q: string): Place | null {
   const lat = Number(m[1])
   const lon = Number(m[2])
   if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null
-  return { id: `coord:${lat},${lon}`, label: `${lat.toFixed(5)}, ${lon.toFixed(5)}`, detail: 'Koordinaten', lat, lon, source: 'coordinates' }
+  return { id: `coord:${lat},${lon}`, label: `${lat.toFixed(5)}, ${lon.toFixed(5)}`, detail: t('search.coordinates'), lat, lon, source: 'coordinates' }
 }
 
 interface PhotonFeature {
@@ -44,17 +45,14 @@ interface PhotonFeature {
 
 function photonLabel(p: PhotonFeature['properties']): { label: string; detail: string } {
   const street = [p.street, p.housenumber].filter(Boolean).join(' ')
-  const label = p.name || street || p.postcode || p.city || 'Unbenannter Ort'
+  const label = p.name || street || p.postcode || p.city || t('search.unnamed')
   const parts = [p.name && street ? street : null, [p.postcode, p.city].filter(Boolean).join(' '), p.state, p.country]
   const detail = parts.filter((x) => x && x !== label).join(', ')
   return { label, detail }
 }
 
 async function photon(q: string, near: LatLon | null, signal?: AbortSignal): Promise<Place[]> {
-  const lang = navigator.language?.slice(0, 2)
-  const params = new URLSearchParams({ q, limit: '6' })
-  // Photon supports de, en, fr only; otherwise "default" (local names).
-  if (lang && ['de', 'en', 'fr'].includes(lang)) params.set('lang', lang)
+  const params = new URLSearchParams({ q, limit: '6', lang: getLang() })
   if (near) {
     params.set('lat', near.lat.toFixed(3))
     params.set('lon', near.lon.toFixed(3))
@@ -97,7 +95,7 @@ async function nominatimThrottle() {
 
 async function nominatim(q: string, signal?: AbortSignal): Promise<Place[]> {
   await nominatimThrottle()
-  const params = new URLSearchParams({ q, format: 'jsonv2', limit: '6', 'accept-language': navigator.language || 'de' })
+  const params = new URLSearchParams({ q, format: 'jsonv2', limit: '6', 'accept-language': getLang() })
   const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, { signal })
   if (!res.ok) throw new Error(`Nominatim ${res.status}`)
   const json = (await res.json()) as NominatimResult[]
@@ -128,7 +126,7 @@ export async function searchPlaces(
   const coord = parseCoordinates(query)
   if (coord) return [coord]
   if (query.length < 3) return []
-  const key = `geo:${query.toLowerCase()}`
+  const key = `geo:${getLang()}:${query.toLowerCase()}`
   const cached = memCache.get(key) ?? (await kvGet<Place[]>(key, CACHE_MS))
   if (cached && cached.length > 0) return cached
   let results: Place[] = []
@@ -142,7 +140,7 @@ export async function searchPlaces(
   if (results.length === 0 && opts.explicit) {
     results = await nominatim(query, opts.signal)
   } else if (photonFailed) {
-    throw new Error('Ortssuche nicht erreichbar')
+    throw new Error('Geocoding unavailable')
   }
   if (results.length > 0) {
     memCache.set(key, results)
@@ -155,7 +153,7 @@ const reverseCache = new Map<string, string | null>()
 
 /** Approximate address for a point (on demand, cached, throttled). */
 export async function reverseGeocode(p: LatLon, signal?: AbortSignal): Promise<string | null> {
-  const key = `rev:${p.lat.toFixed(5)},${p.lon.toFixed(5)}`
+  const key = `rev:${getLang()}:${p.lat.toFixed(5)},${p.lon.toFixed(5)}`
   if (reverseCache.has(key)) return reverseCache.get(key)!
   const cached = await kvGet<string | null>(key, CACHE_MS * 4)
   if (cached !== undefined) return cached
@@ -166,7 +164,7 @@ export async function reverseGeocode(p: LatLon, signal?: AbortSignal): Promise<s
     format: 'jsonv2',
     zoom: '18',
     addressdetails: '1',
-    'accept-language': navigator.language || 'de',
+    'accept-language': getLang(),
   })
   const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, { signal })
   if (!res.ok) throw new Error(`Nominatim ${res.status}`)

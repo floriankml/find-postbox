@@ -6,6 +6,7 @@
  * saving is not available and links to OpenStreetMap instead – nothing is
  * pretended to be saved.
  */
+import type { MessageKey } from '../i18n'
 import type { LatLon, ShippingInfo } from './types'
 
 export type ReportKind =
@@ -41,30 +42,18 @@ const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 export const communityEnabled = Boolean(URL_ && KEY)
 
-export const REPORT_KINDS: { kind: ReportKind; label: string; needsBox: boolean }[] = [
-  { kind: 'shipping', label: 'Internationalen Versand bestätigen', needsBox: true },
-  { kind: 'collection_times', label: 'Leerungszeit aktualisieren', needsBox: true },
-  { kind: 'colour_inscription', label: 'Farbe oder Beschriftung ergänzen', needsBox: true },
-  { kind: 'correction', label: 'Information korrigieren', needsBox: true },
-  { kind: 'removed', label: 'Briefkasten entfernt', needsBox: true },
-  { kind: 'missing', label: 'Briefkasten fehlt', needsBox: false },
+export const REPORT_KINDS: { kind: ReportKind; needsBox: boolean }[] = [
+  { kind: 'shipping', needsBox: true },
+  { kind: 'collection_times', needsBox: true },
+  { kind: 'colour_inscription', needsBox: true },
+  { kind: 'correction', needsBox: true },
+  { kind: 'removed', needsBox: true },
+  { kind: 'missing', needsBox: false },
 ]
 
-export const FIELD_LABELS: Record<string, string> = {
-  shipping: 'Versand',
-  collection_times: 'Leerungszeiten',
-  colour: 'Farbe',
-  inscription: 'Beschriftung',
-  exists: 'Existenz',
-  operator: 'Betreiber',
-  other: 'Sonstiges',
-}
-
-export const STATUS_LABELS: Record<VerificationStatus, string> = {
-  unverified: 'Ungeprüft',
-  confirmed: 'Bestätigt',
-  conflicting: 'Widersprüchliche Angaben',
-}
+export const reportKindKey = (k: ReportKind) => `report.kind.${k}` as MessageKey
+export const fieldKey = (f: string) => `report.field.${f}`
+export const statusKey = (s: VerificationStatus) => `report.status.${s}` as MessageKey
 
 function clientId(): string {
   try {
@@ -83,10 +72,15 @@ function headers(): HeadersInit {
   return { apikey: KEY!, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }
 }
 
-export class CommunityError extends Error {}
+/** `message` is a translation key. */
+export class CommunityError extends Error {
+  constructor(readonly key: MessageKey) {
+    super(key)
+  }
+}
 
 export async function submitReport(r: ReportInput): Promise<void> {
-  if (!communityEnabled) throw new CommunityError('Community-Speicherung ist nicht eingerichtet.')
+  if (!communityEnabled) throw new CommunityError('report.err.disabled')
   const body = {
     kind: r.kind,
     postbox_id: r.postboxId,
@@ -103,9 +97,9 @@ export async function submitReport(r: ReportInput): Promise<void> {
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    if (text.includes('rate_limited')) throw new CommunityError('Zu viele Beiträge in kurzer Zeit. Bitte später erneut versuchen.')
-    if (text.includes('duplicate')) throw new CommunityError('Diesen Hinweis hast du heute bereits gesendet.')
-    throw new CommunityError('Beitrag konnte nicht gespeichert werden.')
+    if (text.includes('rate_limited')) throw new CommunityError('report.err.rateLimited')
+    if (text.includes('duplicate')) throw new CommunityError('report.err.duplicate')
+    throw new CommunityError('report.err.generic')
   }
 }
 
@@ -113,7 +107,7 @@ export async function fetchSummaries(postboxId: string, signal?: AbortSignal): P
   if (!communityEnabled) return []
   const params = new URLSearchParams({ postbox_id: `eq.${postboxId}`, select: '*' })
   const res = await fetch(`${URL_}/rest/v1/postbox_report_summary?${params}`, { headers: headers(), signal })
-  if (!res.ok) throw new CommunityError('Community-Hinweise konnten nicht geladen werden.')
+  if (!res.ok) throw new CommunityError('community.loadError')
   const rows = (await res.json()) as {
     postbox_id: string | null
     field: string
@@ -144,6 +138,6 @@ export function mergeShipping(base: ShippingInfo, summaries: ReportSummary[]): S
     ...base,
     status: confirmed.value,
     evidence: 'community_confirmed',
-    reason: `Von ${confirmed.devices} Nutzer:innen unabhängig bestätigt (Community, nicht offiziell).`,
+    reason: { key: 'ship.reason.community', params: { n: confirmed.devices } },
   }
 }

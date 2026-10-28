@@ -39,31 +39,16 @@ function accessInfo(tags: Record<string, string>): AccessInfo {
   const indoor = tags.indoor === 'yes' || tags['post_box:location'] === 'indoor' || tags.location === 'indoor'
   const level = tags.level
   const access = tags.access?.toLowerCase()
-  if (oh && /^24\/7$/.test(oh.trim())) return { kind: '24/7', label: 'Rund um die Uhr zugänglich (laut OSM)', openingHours: oh, indoor, level }
-  if (access && ['private', 'no', 'customers', 'employees', 'residents'].includes(access)) {
-    const what: Record<string, string> = {
-      private: 'Privat – nicht öffentlich zugänglich',
-      no: 'Kein öffentlicher Zugang',
-      customers: 'Nur für Kundschaft zugänglich',
-      employees: 'Nur für Beschäftigte',
-      residents: 'Nur für Anwohnende',
-    }
-    return { kind: 'restricted', label: what[access], openingHours: oh, indoor, level }
+  if (oh && /^24\/7$/.test(oh.trim())) return { kind: '24/7', openingHours: oh, indoor, level }
+  if (access === 'private' || access === 'no' || access === 'customers' || access === 'employees' || access === 'residents') {
+    return { kind: 'restricted', reason: access, openingHours: oh, indoor, level }
   }
   if (indoor || oh) {
-    return {
-      kind: 'restricted',
-      label: oh ? 'Nur zu den Öffnungszeiten zugänglich' : 'Im Gebäude – vermutlich nur zu dessen Öffnungszeiten zugänglich',
-      openingHours: oh,
-      indoor,
-      level,
-    }
+    return { kind: 'restricted', reason: oh ? 'opening_hours' : 'indoor', openingHours: oh, indoor, level }
   }
   const outdoorType = ['pillar', 'wall', 'lamp', 'drive_through'].includes(tags['post_box:type'] ?? '')
-  if (tags.indoor === 'no' || outdoorType) {
-    return { kind: 'outdoor', label: 'Im Freien – vermutlich jederzeit zugänglich', indoor: false, level }
-  }
-  return { kind: 'unknown', label: 'Zugänglichkeit nicht bekannt', level }
+  if (tags.indoor === 'no' || outdoorType) return { kind: 'outdoor', indoor: false, level }
+  return { kind: 'unknown', level }
 }
 
 function latestCheckDate(tags: Record<string, string>): CheckDate | undefined {
@@ -123,6 +108,7 @@ export function normalizeOsmElement(el: OverpassElement, fetchedAt = Date.now())
   }
 }
 
+/** `message` is for developers; the UI shows a translated text based on `kind`. */
 export class DataSourceError extends Error {
   readonly kind: 'rate_limit' | 'timeout' | 'network' | 'server' | 'too_large'
   constructor(kind: DataSourceError['kind'], message: string) {
@@ -136,7 +122,7 @@ let preferredEndpoint = 0
 
 async function fetchOverpass(query: string, signal?: AbortSignal): Promise<OverpassElement[]> {
   const endpoints = overpassEndpoints()
-  let lastError: DataSourceError = new DataSourceError('network', 'Kein Overpass-Server erreichbar.')
+  let lastError: DataSourceError = new DataSourceError('network', 'No Overpass server reachable')
   // Two rounds over all endpoints; public Overpass servers are often briefly overloaded.
   for (let i = 0; i < endpoints.length * 2; i++) {
     if (i === endpoints.length) await new Promise((r) => setTimeout(r, 2000))
@@ -149,22 +135,22 @@ async function fetchOverpass(query: string, signal?: AbortSignal): Promise<Overp
       // GET avoids a CORS preflight; Overpass supports it for short queries.
       const res = await fetch(url, { signal: combined })
       if (res.status === 429) {
-        lastError = new DataSourceError('rate_limit', 'Der Datendienst ist gerade ausgelastet (zu viele Anfragen).')
+        lastError = new DataSourceError('rate_limit', 'Rate limited (HTTP 429)')
         continue
       }
       if (res.status === 504) {
-        lastError = new DataSourceError('timeout', 'Der Datendienst hat zu lange gebraucht.')
+        lastError = new DataSourceError('timeout', 'Timeout')
         continue
       }
       if (!res.ok) {
-        lastError = new DataSourceError('server', `Der Datendienst antwortete mit Fehler ${res.status}.`)
+        lastError = new DataSourceError('server', `HTTP ${res.status}`)
         continue
       }
       const json = (await res.json()) as { elements?: OverpassElement[]; remark?: string }
       if (json.remark && /runtime error|timed out|out of memory/i.test(json.remark)) {
         lastError = new DataSourceError(
           /memory/i.test(json.remark) ? 'too_large' : 'timeout',
-          'Der Datendienst konnte die Anfrage nicht vollständig beantworten.',
+          json.remark,
         )
         continue
       }
@@ -174,8 +160,8 @@ async function fetchOverpass(query: string, signal?: AbortSignal): Promise<Overp
       if (signal?.aborted) throw e
       lastError =
         e instanceof DOMException && e.name === 'TimeoutError'
-          ? new DataSourceError('timeout', 'Der Datendienst hat zu lange gebraucht.')
-          : new DataSourceError('network', 'Der Datendienst ist nicht erreichbar.')
+          ? new DataSourceError('timeout', 'Timeout')
+          : new DataSourceError('network', 'Network error')
     }
   }
   throw lastError
